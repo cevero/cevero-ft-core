@@ -1,0 +1,9 @@
+cevero-ft-core:
+  files: [
+    rtl/ftm/comparator.sv,
+    rtl/ftm/control.sv,
+    rtl/ftm/sgpr.sv,
+    rtl/ftm/spc.sv,
+    rtl/ftm/ft_module.sv,
+    rtl/cevero_ft_core.sv
+  ]
