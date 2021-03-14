@@ -75,12 +75,12 @@ module cevero_ft_core
     logic [4:0]     regfile_waddr_0;
     logic [31:0]    regfile_wdata_0;
 	
-	logic           clock_en_0  = 1;    // enable clock, otherwise it is gated
-	logic           test_en_0 = 0;     // enable all clock gates for testing
+	logic           clock_en_0; //  = 1;    // enable clock, otherwise it is gated
+	logic           test_en_0; // = 0;     // enable all clock gates for testing
 	
 	// Core ID, Cluster ID and boot address are considered more or less static
-	logic [ 3:0]    core_id_0 = core_id_i;
-	logic [ 5:0]    cluster_id_0 = cluster_id_i;
+	logic [ 3:0]    core_id_0; // = core_id_i;
+	logic [ 5:0]    cluster_id_0; // = cluster_id_i;
 	logic [31:0]    boot_addr_0;
 	
 	// Instruction memory interface
@@ -132,12 +132,12 @@ module cevero_ft_core
     logic [4:0]     regfile_waddr_1;
     logic [31:0]    regfile_wdata_1;
 
-	logic           clock_en_1  = 1;    // enable clock, otherwise it is gated
-	logic           test_en_1 = 0;     // enable all clock gates for testing
+	logic           clock_en_1; // = 1;    // enable clock, otherwise it is gated
+	logic           test_en_1; // = 0;     // enable all clock gates for testing
 	
 	// Core ID, Cluster ID and boot address are considered more or less static
-	logic [ 3:0]    core_id_1 = core_id_i;
-	logic [ 5:0]    cluster_id_1 = cluster_id_i;
+	logic [ 3:0]    core_id_1; // = core_id_i;
+	logic [ 5:0]    cluster_id_1; // = cluster_id_i;
 	logic [31:0]    boot_addr_1;
 	
 	// Instruction memory interface
@@ -189,54 +189,62 @@ module cevero_ft_core
 	// assign fetch_enable_i 
 	// assign instr_addr_o_0
 
-	assign clock_en_i = clock_en_0;    // enable clock, otherwise it is gated
-	assign test_en_i = test_en_0;     // enable all clock gates for testing
+	assign clock_en_0 = clock_en_i;    // enable clock, otherwise it is gated
+	assign test_en_0 = test_en_i;     // enable all clock gates for testing
 
 	// Core ID, Cluster ID and boot address are considered more or less static
-	assign core_id_i = core_id_0;
-	assign cluster_id_i = cluster_id_0;
-	assign boot_addr_i = boot_addr_0;
+	assign core_id_0 = core_id_i;
+	assign cluster_id_0 = cluster_id_i;
+	assign boot_addr_0 = boot_addr_i;
 
 	// Instruction memory interface
 	assign instr_req_o = instr_req_0;
-	assign instr_gnt_i = instr_gnt_0;
-	assign instr_rvalid_i = instr_rvalid_0;
+	assign instr_gnt_0 = instr_gnt_i;
+	assign instr_rvalid_0 = instr_rvalid_i;
 	assign instr_addr_o = instr_addr_0;
-	assign instr_rdata_i = instr_rdata_0;
+	assign instr_rdata_0 = instr_rdata_i;
 
 	// Data memory interface
 	assign data_req_o = data_req_0;
-	assign data_gnt_i = data_gnt_0;
-	assign data_rvalid_i = data_rvalid_0;
+	assign data_gnt_0 = data_gnt_i;
+	assign data_rvalid_0 = data_rvalid_i;
 	assign data_we_o = data_we_0;
 	assign data_be_o = data_be_0;
 	assign data_addr_o = data_addr_0;
 	assign data_wdata_o = data_wdata_0;
-	assign data_rdata_i = data_rdata_0;
-	assign data_err_i = data_err_0;
+	assign data_rdata_0 = data_rdata_i;
+	assign data_err_0 = data_err_i;
 
 	// Interrupt inputs
-	assign irq_i = irq_0;
-	assign irq_id_i = irq_id_in_0;
+	assign irq_0 = irq_i;
+	assign irq_id_in_0 = irq_id_i;
 	assign irq_ack_o = irq_ack_0;
 	assign irq_id_o = irq_id_out_0;
 
 	// Debug Interface
-	assign debug_req_i = debug_req_0;
+	assign debug_req_0 = debug_req_i;
 	assign debug_gnt_o = debug_gnt_0;
 	assign debug_rvalid_o = debug_rvalid_0;
-	assign debug_addr_i = debug_addr_0;
-	assign debug_we_i = debug_we_0;
-	assign debug_wdata_i = debug_wdata_0;
+	//assign debug_addr_0 = debug_addr_i;
+	//assign debug_we_0 = debug_we_i;
+	//assign debug_wdata_0 = debug_wdata_i;
 	assign debug_rdata_o = debug_rdata_0;
 	assign debug_halted_o = debug_halted_0;
-	assign debug_halt_i = debug_halt_0;
-	assign debug_resume_i = debug_resume_0;
+	//assign debug_halt_0 = debug_halt_i;
+	//assign debug_resume_0 = debug_resume_i;
 
-    // assigns core 0
-	assign instr_addr_o_0 = instr_addr_0;
+    // // assigns core 0
+	// assign instr_addr_o_0 = instr_addr_0;
     
     // --- assigns core 1 ---
+
+	assign clock_en_1 = clock_en_i;    // enable clock, otherwise it is gated
+	assign test_en_1 = test_en_i;     // enable all clock gates for testing
+
+	// Core ID, Cluster ID and boot address are considered more or less static
+	assign core_id_1 = core_id_i;
+	assign cluster_id_1 = cluster_id_i;
+	assign boot_addr_1 = boot_addr_i;
 
     // instr memory
     assign instr_rdata_1 = instr_rdata_0;
@@ -263,31 +271,45 @@ module cevero_ft_core
     logic [31:0] data_tmp;
     logic [31:0] spc_ftm;
 
-    assign debug_halt_0   = halt;
-    assign debug_halt_1   = halt;
-    assign debug_resume_0 = resume;
-    assign debug_resume_1 = resume;
-    assign debug_we_0     = debug_halted_0;
-    assign debug_we_1     = debug_halted_1;
-    assign debug_addr_0   = addr_tmp;
-    assign debug_addr_1   = addr_tmp;
-    assign debug_wdata_0  = data_tmp;
-    assign debug_wdata_1  = data_tmp;
-    assign rst_ctrl = rst_n & rst_ni;
+	// These assignments allow the debug interface (Core 0) to be accessed
+	// internaly by the FTM and externaly by the SoC
 
-    // muxes
-    assign addr_tmp = (shift) ? 15'h2000 : (15'h400 + addr_ftm);
-    assign data_tmp = (shift) ? spc_ftm : data_ftm;
+    assign debug_halt_0   = halt | debug_halt_i;
+    assign debug_halt_1   = halt;
+    assign debug_resume_0 = resume | debug_resume_i;
+    assign debug_resume_1 = resume;
+    assign debug_we_0     = debug_halted_0 | debug_we_i;
+    assign debug_we_1     = debug_halted_1;
+	assign rst_ctrl = rst_n & rst_ni;
+
+	always @(posedge halt, posedge resume) begin
+		if (halt) begin
+			debug_addr_0   <= addr_tmp;
+			debug_addr_1   <= addr_tmp;
+			debug_wdata_0  <= data_tmp;
+			debug_wdata_1  <= data_tmp;
+		end
+		else if (resume) begin
+			debug_addr_0   <= debug_addr_i;
+			debug_addr_1   <= debug_addr_i;
+			debug_wdata_0  <= debug_wdata_i;
+			debug_wdata_1  <= debug_wdata_1;
+		end
+	end
+
+    // // muxes
+    // assign addr_tmp = (shift) ? 15'h2000 : (15'h400 + addr_ftm);
+    // assign data_tmp = (shift) ? spc_ftm : data_ftm;
 
     // ***** test ***** //
-    logic [31:0] data;
-    logic [31:0] test_data;
+    // logic [31:0] data;
+    // logic [31:0] test_data;
 
-    always_comb
-        if (error)
-            test_data <= 32'b00000000011000110000001110110011;
+    // always_comb
+    //     if (error)
+    //         test_data <= 32'b00000000011000110000001110110011;
             
-    assign data = (error) ? test_data : instr_rdata_0;
+    // assign data = (error) ? test_data : instr_rdata_0;
 
     ////////////////////////////////////////////////////////////////////
     //  _           _              _   _       _   _                  //
@@ -331,21 +353,21 @@ module cevero_ft_core
         .regfile_wdata_o     ( regfile_wdata_0     ),
 
 		.clk_i               ( clk_i               ),
-		.rst_ni              ( rst_ctrl            ),
+		.rst_ni              ( rst_ni            ),
 		
 		.clock_en_i          ( clock_en_0          ),
 		.test_en_i           ( test_en_0           ),
 		
 		.core_id_i           ( core_id_0           ),
 		.cluster_id_i        ( cluster_id_0        ),
-		.boot_addr_i         ( boot_addr_i         ),
+		.boot_addr_i         ( boot_addr_0         ),
 		
 		.instr_req_o         ( instr_req_0         ),
 		.instr_gnt_i         ( instr_gnt_0         ),
 		.instr_rvalid_i      ( instr_rvalid_0      ),
 		.instr_addr_o        ( instr_addr_0        ),
-		//.instr_rdata_i       ( instr_rdata_0       ),
-		.instr_rdata_i       ( data       ),
+		.instr_rdata_i       ( instr_rdata_0       ),
+		//.instr_rdata_i       ( data       ),
 		
 		.data_req_o          ( data_req_0          ),
 		.data_gnt_i          ( data_gnt_0          ),
@@ -358,9 +380,9 @@ module cevero_ft_core
 		.data_err_i          ( data_err_0          ),
 		
 		.irq_i               ( irq_0               ),
-		.irq_id_i            ( irq_id_in_0         ),
+		.irq_id_i            ( irq_id_in_0          ),
 		.irq_ack_o           ( irq_ack_0           ),
-		.irq_id_o            ( irq_id_out_0        ),
+		.irq_id_o            ( irq_id_oou_0        ),
 		
 		.debug_req_i         ( debug_req_0         ),
 		.debug_gnt_o         ( debug_gnt_0         ),
@@ -389,7 +411,7 @@ module cevero_ft_core
         .regfile_wdata_o     ( regfile_wdata_1     ),
 
 		.clk_i               ( clk_i               ),
-		.rst_ni              ( rst_ctrl            ),
+		.rst_ni              ( rst_ni            ),
 		
 		.clock_en_i          ( clock_en_1          ),
 		.test_en_i           ( test_en_1           ),
