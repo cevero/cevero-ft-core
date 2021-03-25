@@ -275,11 +275,11 @@ module cevero_ft_core
 	// internaly by the FTM and externaly by the SoC
 
     assign debug_halt_0   = halt | debug_halt_i;
-    assign debug_halt_1   = halt;
+    assign debug_halt_1   = halt | debug_halt_i;
     assign debug_resume_0 = resume | debug_resume_i;
-    assign debug_resume_1 = resume;
+    assign debug_resume_1 = resume | debug_resume_i;
     assign debug_we_0     = debug_halted_0 | debug_we_i;
-    assign debug_we_1     = debug_halted_1;
+    assign debug_we_1     = debug_halted_1 | debug_we_i;
 	assign rst_ctrl = rst_n & rst_ni;
 
 	always @(posedge halt, posedge resume) begin
@@ -297,19 +297,19 @@ module cevero_ft_core
 		end
 	end
 
-    // // muxes
-    // assign addr_tmp = (shift) ? 15'h2000 : (15'h400 + addr_ftm);
-    // assign data_tmp = (shift) ? spc_ftm : data_ftm;
+    // muxes
+    assign addr_tmp = (shift) ? 15'h2000 : (15'h400 + addr_ftm);
+    assign data_tmp = (shift) ? spc_ftm : data_ftm;
 
     // ***** test ***** //
-    // logic [31:0] data;
-    // logic [31:0] test_data;
+    logic [31:0] data;
+    logic [31:0] test_data;
 
-    // always_comb
-    //     if (error)
-    //         test_data <= 32'b00000000011000110000001110110011;
+    always_comb
+        if (error)
+            test_data <= 32'b00000000011000110000001110110011;
             
-    // assign data = (error) ? test_data : instr_rdata_0;
+    assign data = (error) ? test_data : instr_rdata_0;
 
     ////////////////////////////////////////////////////////////////////
     //  _           _              _   _       _   _                  //
@@ -353,7 +353,7 @@ module cevero_ft_core
         .regfile_wdata_o     ( regfile_wdata_0     ),
 
 		.clk_i               ( clk_i               ),
-		.rst_ni              ( rst_ni            ),
+		.rst_ni              ( rst_ctrl            ),
 		
 		.clock_en_i          ( clock_en_0          ),
 		.test_en_i           ( test_en_0           ),
@@ -366,8 +366,8 @@ module cevero_ft_core
 		.instr_gnt_i         ( instr_gnt_0         ),
 		.instr_rvalid_i      ( instr_rvalid_0      ),
 		.instr_addr_o        ( instr_addr_0        ),
-		.instr_rdata_i       ( instr_rdata_0       ),
-		//.instr_rdata_i       ( data       ),
+		//.instr_rdata_i       ( instr_rdata_0       ),
+		.instr_rdata_i       ( data       ),
 		
 		.data_req_o          ( data_req_0          ),
 		.data_gnt_i          ( data_gnt_0          ),
@@ -411,7 +411,7 @@ module cevero_ft_core
         .regfile_wdata_o     ( regfile_wdata_1     ),
 
 		.clk_i               ( clk_i               ),
-		.rst_ni              ( rst_ni            ),
+		.rst_ni              ( rst_ctrl            ),
 		
 		.clock_en_i          ( clock_en_1          ),
 		.test_en_i           ( test_en_1           ),
