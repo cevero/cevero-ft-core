@@ -51,6 +51,9 @@ module ft_module
         .error_o        (error       )
     );
 
+    // Writing to the sgpr should happen only when the controler allows (we_sgpr)
+    // and we have both cores writing to the registers (we_a_i & we_b_i)
+    assign we_sgpr_i = we_sgpr & we_a_i & we_b_i;
     ft_sgpr sgpr_module
     (
         .clk            (clk_i       ),
@@ -62,7 +65,7 @@ module ft_module
         .rdata_b_o      (            ),
         .waddr_a_i      (addr        ),
         .wdata_a_i      (data        ),
-        .we_a_i         (we_sgpr     )
+        .we_a_i         (we_sgpr_i   )
     );
 
     ft_spc spc_module
