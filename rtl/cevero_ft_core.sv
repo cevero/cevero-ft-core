@@ -56,9 +56,7 @@ module cevero_ft_core
 
 	// CPU Control Signals
 	input  logic        fetch_enable_i,
-	input  logic [N_EXT_PERF_COUNTERS-1:0] ext_perf_counters_i,
-
-    input  logic        error
+	input  logic [N_EXT_PERF_COUNTERS-1:0] ext_perf_counters_i
 );
  
 
@@ -74,6 +72,7 @@ module cevero_ft_core
     logic           regfile_we_0;
     logic [4:0]     regfile_waddr_0;
     logic [31:0]    regfile_wdata_0;
+	logic [31:0]    pc_o_0;
 	
 	logic           clock_en_0; //  = 1;    // enable clock, otherwise it is gated
 	logic           test_en_0; // = 0;     // enable all clock gates for testing
@@ -131,6 +130,7 @@ module cevero_ft_core
     logic           regfile_we_1;
     logic [4:0]     regfile_waddr_1;
     logic [31:0]    regfile_wdata_1;
+	logic [31:0]    pc_o_1;
 
 	logic           clock_en_1; // = 1;    // enable clock, otherwise it is gated
 	logic           test_en_1; // = 0;     // enable all clock gates for testing
@@ -222,7 +222,7 @@ module cevero_ft_core
 	assign irq_id_o = irq_id_out_0;
 
 	// Debug Interface
-	assign debug_req_0 = debug_req_i;
+	//assign debug_req_0 = debug_req_i;
 	assign debug_gnt_o = debug_gnt_0;
 	assign debug_rvalid_o = debug_rvalid_0;
 	//assign debug_addr_0 = debug_addr_i;
@@ -274,6 +274,8 @@ module cevero_ft_core
 	// These assignments allow the debug interface (Core 0) to be accessed
 	// internaly by the FTM and externaly by the SoC
 
+	assign debug_req_0 =  debug_halted_0 | debug_req_i;
+	assign debug_req_1 =  debug_halted_1 | debug_req_i;
     assign debug_halt_0   = halt | debug_halt_i;
     assign debug_halt_1   = halt | debug_halt_i;
     assign debug_resume_0 = resume | debug_resume_i;
@@ -282,14 +284,14 @@ module cevero_ft_core
     assign debug_we_1     = debug_halted_1 | debug_we_i;
 	assign rst_ctrl = rst_n & rst_ni;
 
-	always @(posedge halt, posedge resume) begin
-		if (halt) begin
+	always_comb begin
+		if (debug_halted_0 & debug_halted_1) begin
 			debug_addr_0   <= addr_tmp;
 			debug_addr_1   <= addr_tmp;
 			debug_wdata_0  <= data_tmp;
 			debug_wdata_1  <= data_tmp;
 		end
-		else if (resume) begin
+		else begin
 			debug_addr_0   <= debug_addr_i;
 			debug_addr_1   <= debug_addr_i;
 			debug_wdata_0  <= debug_wdata_i;
@@ -298,18 +300,47 @@ module cevero_ft_core
 	end
 
     // muxes
-    assign addr_tmp = (shift) ? 15'h2000 : (15'h400 + addr_ftm);
+    assign addr_tmp = (shift) ? 15'h2000 : (15'h400 + (addr_ftm << 2)); 
+	// Shift operation to allow for aligned access
+	// because the debug unit assumes aligned access
     assign data_tmp = (shift) ? spc_ftm : data_ftm;
 
     // ***** test ***** //
+	logic error = 0;
+	int error_count = 0;
     logic [31:0] data;
     logic [31:0] test_data;
 
-    always_comb
-        if (error)
-            test_data <= 32'b00000000011000110000001110110011;
-            
-    assign data = (error) ? test_data : instr_rdata_0;
+	always_ff @(posedge clk_i) begin
+		if ( error == 0 && instr_addr_o == 32'h1c0083cc ) begin
+			$display("ERROR generation enabled at %t ps", $realtime);
+			error = 1;
+		end else if ( error == 1 && instr_addr_o == 32'h1c0083fc ) begin
+			$display("ERROR generation disabled at %t ps", $realtime);
+			error = 0;
+		end
+	end
+
+	int r;
+
+	function logic [31:0] random_error_generator();
+		if (error && error_count < 2) begin
+			r = $urandom_range(0,100);
+			if (r == 0) begin 
+				$display("[ERROR INSERTION] %t", $realtime);
+				return 32'b00000000011000110000001110110011;
+			end
+		end 
+		return instr_rdata_0;
+	endfunction
+
+    // Count detected errors
+	always_ff @( posedge ftm.error ) begin : countError
+		error_count = error_count + 1;
+		$display("[ERROR DETECTED] %t", $realtime);
+	end
+
+    always_comb data = random_error_generator(); 
 
     ////////////////////////////////////////////////////////////////////
     //  _           _              _   _       _   _                  //
@@ -330,7 +361,7 @@ module cevero_ft_core
         .addr_b_i            ( regfile_waddr_1     ),
         .data_a_i            ( regfile_wdata_0     ),
         .data_b_i            ( regfile_wdata_1     ),
-        .spc_i               ( instr_addr_0        ),
+        .spc_i               ( pc_o_0        ),
         .halted_i            ( debug_halted_0      ),
 
         .spc_o               ( spc_ftm             ),
@@ -351,6 +382,7 @@ module cevero_ft_core
         .regfile_we_o        ( regfile_we_0        ),
         .regfile_waddr_o     ( regfile_waddr_0     ),
         .regfile_wdata_o     ( regfile_wdata_0     ),
+		.pc_o                ( pc_o_0              ),
 
 		.clk_i               ( clk_i               ),
 		.rst_ni              ( rst_ctrl            ),
@@ -366,8 +398,7 @@ module cevero_ft_core
 		.instr_gnt_i         ( instr_gnt_0         ),
 		.instr_rvalid_i      ( instr_rvalid_0      ),
 		.instr_addr_o        ( instr_addr_0        ),
-		//.instr_rdata_i       ( instr_rdata_0       ),
-		.instr_rdata_i       ( data       ),
+		.instr_rdata_i       ( data                ),
 		
 		.data_req_o          ( data_req_0          ),
 		.data_gnt_i          ( data_gnt_0          ),
@@ -409,6 +440,7 @@ module cevero_ft_core
         .regfile_we_o        ( regfile_we_1        ),
         .regfile_waddr_o     ( regfile_waddr_1     ),
         .regfile_wdata_o     ( regfile_wdata_1     ),
+		.pc_o                ( pc_o_1              ),
 
 		.clk_i               ( clk_i               ),
 		.rst_ni              ( rst_ctrl            ),
