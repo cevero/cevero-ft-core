@@ -31,9 +31,11 @@ module ft_control
 
     always_ff @(posedge clk_i) begin
         case (state)
-            WAIT:
+            WAIT: begin
                 if (error_i)
                     state <= RESET;
+                iterator <= 0;
+            end
             RESET:
                 state <= HALT;
             HALT:
@@ -53,37 +55,65 @@ module ft_control
                 state <= WAIT;
             end
         endcase
+    end
 
+    always_comb begin
         case (state)
             WAIT: begin
                 halt_o <= 0;
                 resume_o <= 0;
-                iterator <= 0;
                 shift_o <= 0;
                 reset_o <= 1;
-                we_sgpr_o <= 0;
-                we_spc_o <= 0;
-            end
-            RESET: begin
-                reset_o <= 0;
-                we_spc_o <= 1;
-            end
-            HALT: begin
-                reset_o <= 1;
-                halt_o <= 1;
-                shift_o <= 1;
-            end
-            HALT_WAIT:
-                halt_o <= 0;
-            WORK_SGPR: begin
-                shift_o <= 0;
                 we_sgpr_o <= 1;
                 we_spc_o <= 0;
             end
-            DONE: begin
+            RESET: begin
+                halt_o <= 0;
+                resume_o <= 0;
+                shift_o <= 0;
+                reset_o <= 0;
+                we_sgpr_o <= 0;
+                we_spc_o <= 1;
+            end
+            HALT: begin
+                halt_o <= 1;
+                resume_o <= 0;
+                reset_o <= 1;
+                shift_o <= 1;
                 we_sgpr_o <= 0;
                 we_spc_o <= 0;
+            end
+            HALT_WAIT: begin
+                halt_o <= 0;
+                resume_o <= 0;
+                reset_o <= 1;
+                shift_o <= 1;
+                we_sgpr_o <= 0;
+                we_spc_o <= 0;
+            end
+            WORK_SPC: begin
+                halt_o <= 0;
+                reset_o <= 1;
+                resume_o <= 0;
+                shift_o <= 0;
+                we_spc_o <= 0;
+                we_sgpr_o <= 0;
+            end
+            WORK_SGPR: begin
+                halt_o <= 0;
+                reset_o <= 1;
+                resume_o <= 0;
+                shift_o <= 0;
+                we_spc_o <= 0;
+                we_sgpr_o <= 0;
+            end
+            DONE: begin
+                halt_o <= 0;
+                reset_o <= 1;
                 resume_o <= 1;
+                shift_o <= 0;
+                we_spc_o <= 0;
+                we_sgpr_o <= 0;
             end
         endcase
     end
