@@ -312,10 +312,12 @@ module cevero_ft_core
     logic [31:0] test_data;
 
 	always_ff @(posedge clk_i) begin
-		if ( error == 0 && instr_addr_o == 32'h1c0083cc ) begin
+		// This register core_0.cs_registers_i.PCMR_q receives 2'h3 when
+		// the performance counters are active and 2'h0 when they are stopped
+		if ( error == 0 && core_0.cs_registers_i.PCMR_q == 2'h3 ) begin
 			$display("ERROR generation enabled at %t ps", $realtime);
 			error = 1;
-		end else if ( error == 1 && instr_addr_o == 32'h1c0083fc ) begin
+		end else if ( error == 1 && core_0.cs_registers_i.PCMR_q == 2'h0 ) begin
 			$display("ERROR generation disabled at %t ps", $realtime);
 			error = 0;
 		end
@@ -324,7 +326,7 @@ module cevero_ft_core
 	int r;
 
 	function logic [31:0] random_error_generator();
-		if (error && error_count < 2) begin
+		if (error && error_count < 0) begin
 			r = $urandom_range(0,100);
 			if (r == 0) begin 
 				$display("[ERROR INSERTION] %t", $realtime);
