@@ -310,27 +310,45 @@ module cevero_ft_core
 	int error_count = 0;
     logic [31:0] data;
     logic [31:0] test_data;
+	logic enable_ftm = 0;
 
 	always_ff @(posedge clk_i) begin
-		// This register core_0.cs_registers_i.PCMR_q receives 2'h3 when
-		// the performance counters are active and 2'h0 when they are stopped
-		if ( error == 0 && core_0.cs_registers_i.PCMR_q == 2'h3 ) begin
-			$display("ERROR generation enabled at %t ps", $realtime);
+		// This signal instr_rdata_i receives the instruction data
+		// When it is "0x00a00033" (add	zero,zero,a0), the error is enabled
+		// When it is "0x00b00033" (add	zero,zero,a1), the error is disabled
+		// If the "add" operation saves to the zero register, it is a no-operation instruction
+		// because any writes to zero register are ignored
+
+		if ( error == 0 && core_0.id_stage_i.instr == 32'h00a00033 ) begin
+			$display("ERROR generation ~ENABLED~ at %t ps", $realtime);
 			error = 1;
-		end else if ( error == 1 && core_0.cs_registers_i.PCMR_q == 2'h0 ) begin
-			$display("ERROR generation disabled at %t ps", $realtime);
+		end else if ( error == 1 && core_0.id_stage_i.instr == 32'h00b00033 ) begin
+			$display("ERROR generation ~DISABLED~ at %t ps", $realtime);
 			error = 0;
+		end
+	end
+
+	always_ff @(posedge clk_i) begin
+		if ( core_0.id_stage_i.instr == 32'h00c00033 ) begin
+			$display("FTM ~ENABLED~ at %t ps", $realtime);
+			enable_ftm = 1;
+		end else if ( core_0.id_stage_i.instr == 32'h00d00033 ) begin
+			$display("FTM ~DISABLED~ at %t ps", $realtime);
+			enable_ftm = 0;
 		end
 	end
 
 	int r;
 
 	function logic [31:0] random_error_generator();
-		if (error && error_count < 0) begin
+		if (error && error_count < 3) begin
 			r = $urandom_range(0,100);
-			if (r == 0) begin 
+			// state = 0 means that the FTM is not in recovery state
+			// We still have to avoid inserting errors during error recovery
+			//if (r == 0 && ftm.control_module.state == 3'b000) begin
+			if (r == 0) begin
 				$display("[ERROR INSERTION] %t", $realtime);
-				return 32'b00000000011000110000001110110011;
+				return 32'b00000000011000110000001110110011; //32'h006303b3
 			end
 		end 
 		return instr_rdata_0;
@@ -363,8 +381,9 @@ module cevero_ft_core
         .addr_b_i            ( regfile_waddr_1     ),
         .data_a_i            ( regfile_wdata_0     ),
         .data_b_i            ( regfile_wdata_1     ),
-        .spc_i               ( pc_o_0        ),
+        .spc_i               ( pc_o_0        	   ),
         .halted_i            ( debug_halted_0      ),
+		.enable_i            ( enable_ftm          ),
 
         .spc_o               ( spc_ftm             ),
         .addr_o              ( addr_ftm            ),

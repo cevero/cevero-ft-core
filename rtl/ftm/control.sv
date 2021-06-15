@@ -6,6 +6,7 @@ module ft_control
     input  logic                  clk_i,
     input  logic                  error_i,
     input  logic                  halted_i,
+    input  logic                  enable_i,
     output logic                  reset_o,
     output logic                  halt_o,
     output logic                  resume_o,
@@ -28,14 +29,12 @@ module ft_control
     logic [2:0]            state = 3'b000;
     logic [ADDR_WIDTH-1:0] iterator;
     logic [ADDR_WIDTH-1:0] addr;
+    logic                  recovery_error = 1'b0;
 
     always_ff @(posedge clk_i) begin
-        case (state)
-            WAIT: begin
-                if (error_i)
-                    state <= RESET;
-                iterator <= 0;
-            end
+        if (enable_i) begin
+            case (state)
+            WAIT: begin end                
             RESET:
                 state <= HALT;
             HALT:
@@ -49,12 +48,25 @@ module ft_control
                 if (iterator < NUM_REG-1) begin
                     iterator = iterator + 1;
                     addr = iterator;
-                end else 
+                end else
                     state <= DONE;
             DONE: begin
                 state <= WAIT;
+                iterator <= 0;
+                recovery_error <= 0;
             end
-        endcase
+            default: 
+                state <= RESET;
+            endcase
+
+            if (error_i) begin
+                if (state != WAIT) begin
+                    recovery_error <= 1;
+                end
+                state <= RESET;
+                iterator <= 0;
+            end
+        end
     end
 
     always_comb begin
@@ -73,7 +85,10 @@ module ft_control
                 shift_o <= 0;
                 reset_o <= 0;
                 we_sgpr_o <= 0;
-                we_spc_o <= 1;
+                // spc should be saved only if we have an error during
+                // normal program execution. If the error happens during recovery
+                // we should avoid spc saving (keeping the spc that was previously saved)
+                we_spc_o <= ~recovery_error;
             end
             HALT: begin
                 halt_o <= 1;

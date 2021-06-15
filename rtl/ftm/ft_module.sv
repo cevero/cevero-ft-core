@@ -13,6 +13,7 @@ module ft_module
     input  logic [DATA_WIDTH-1:0] data_a_i,
     input  logic [DATA_WIDTH-1:0] data_b_i,
     input  logic                  halted_i,
+    input  logic                  enable_i,
 
     // spc inputs and outputs
     input  logic [DATA_WIDTH-1:0] spc_i,
@@ -31,7 +32,6 @@ module ft_module
     output logic                  reset_o
 );
 
-    logic                  enable;
     logic                  error;
     logic                  we_sgpr;
     logic                  we_spc;
@@ -53,7 +53,7 @@ module ft_module
 
     // Writing to the sgpr should happen only when the controler allows (we_sgpr)
     // and we have both cores writing to the registers (we_a_i & we_b_i)
-    assign we_sgpr_i = we_sgpr & we_a_i & we_b_i;
+    assign we_sgpr_i = we_sgpr & we_a_i & we_b_i & ~error;
     ft_sgpr sgpr_module
     (
         .clk            (clk_i       ),
@@ -82,6 +82,7 @@ module ft_module
         .clk_i         (clk_i        ),
         .error_i       (error        ),
         .halted_i      (halted_i     ),
+        .enable_i      (enable_i     ),
         .reset_o       (reset_o      ),
         .halt_o        (halt_o       ),
         .resume_o      (resume_o     ),
